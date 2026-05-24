@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data — CV Warehouse Applications</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/shared.css" />
+  <style>
+    body { overflow: hidden; }
+
+    .data-stage {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: .5fr 2fr;
+      grid-template-columns: .5fr 1fr;
+      gap: 1.25rem;
+    }
+
+    .deco-diamond {
+      width: 32px; height: 32px;
+      border: 1px solid var(--gold-dim);
+      transform: rotate(45deg);
+      position: relative;
+      margin-bottom: 0.25rem;
+    }
+    .deco-diamond::before {
+      content: '';
+      position: absolute;
+      inset: 5px;
+      border: 1px solid var(--gold);
+    }
+
+    .dev-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.6;
+    }
+
+    .model-list-container {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 1.5rem;
+      background-color: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--gold-dim);
+      overflow-y: auto;
+    }
+
+    .model-list-top {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: .5rem;
+      margin-bottom: 1rem;
+    }
+
+    .model-list-bottom {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .model-list-item {
+      padding: 0.75rem;
+      background-color: rgba(217, 176, 76, 0.1);
+      border: 1px solid var(--gold-dim);
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--gold);
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .model-list-item:hover {
+      background-color: rgba(217, 176, 76, 0.2);
+      border-color: var(--gold);
+    }
+
+    .model-list-item.selected {
+      background-color: rgba(217, 176, 76, 0.3);
+      border-color: var(--gold);
+    }
+
+    .model-viewer-container {
+      background-color: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--gold-dim);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #viewer {
+      width: 100%;
+      height: 100%;
+    }
+
+    .viewer-controls {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #model-select {
+      padding: 0.75rem;
+      background-color: black;
+      border: 1px solid var(--gold-dim);
+      border-radius: 4px;
+      color: var(--gold);
+      font-family: 'Cormorant Garamond', serif;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #model-select:hover {
+      border-color: var(--gold);
+    }
+
+    #model-select:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(217, 176, 76, 0.2);
+    }
+
+    #status {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 0.85rem;
+      color: var(--gold);
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="site-title">CV Warehouse Applications</span>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="env.html"   class="nav-link">3D Env</a>
+        <a href="cams.html"  class="nav-link">Cams</a>
+        <a href="data.html"  class="nav-link active">Data</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="data-stage">
+    <div class="model-list-container">
+      <div class="model-list-top">
+        <div class="deco-diamond"></div>
+        <div class="dev-eyebrow">Previous Objects</div>
+      </div>
+      <div class="model-list-bottom">
+        <select id="model-select" aria-label="Choose model"></select>
+        <button onclick="window.loadModel()" style="padding: 0.75rem; background-color: rgba(217, 176, 76, 0.15); border: 1px solid var(--gold-dim); border-radius: 4px; color: var(--gold); font-family: 'Cormorant Garamond', serif; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='rgba(217, 176, 76, 0.25)'" onmouseout="this.style.backgroundColor='rgba(217, 176, 76, 0.15)'">Load Model</button>
+      </div>
+    </div>
+
+    <div class="model-viewer-container">
+      <!-- Three.js renders here -->
+      <div id="viewer"></div>
+
+      <!-- Controls overlay -->
+      <div class="viewer-controls">
+        <div style="display: flex; flex-direction: column; align-items: flex-start; margin-right: 1rem;">
+          <label style="font-size: 0.75rem; color: white; margin-bottom: 0.25rem;">Images for Photogrammetry</label>
+          <input type="file" id="files" multiple accept="image/*"/>
+        </div>
+        <input type="text" id="model-name" placeholder="Name (optional)" style="padding: 0.75rem; background-color: black; border: 1px solid var(--gold-dim); border-radius: 4px; color: var(--gold); font-family: 'Cormorant Garamond', serif; width: 150px; margin-right: 0.5rem;"/>
+        <button onclick="upload()" title="Process images with Meshroom to create 3D models">Upload & Process</button>
+
+        <div style="width: 1px; height: 20px; background-color: var(--gold-dim); margin: 0 1rem;"></div>
+
+        <div style="display: flex; flex-direction: column; align-items: flex-start; margin-right: 0.5rem;">
+          <label style="font-size: 0.75rem; color: white; margin-bottom: 0.25rem;">Direct OBJ Upload</label>
+          <input type="file" id="obj-files" multiple accept=".obj"/>
+        </div>
+        <button onclick="uploadOBJ()" style="padding: 0.75rem; background-color: rgba(76, 175, 80, 0.15); border: 1px solid #4CAF50; border-radius: 4px; color: #4CAF50; font-family: 'Cormorant Garamond', serif; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.backgroundColor='rgba(76, 175, 80, 0.25)'" onmouseout="this.style.backgroundColor='rgba(76, 175, 80, 0.15)'" title="Upload OBJ files directly">Upload OBJ</button>
+
+        <span id="status"></span>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import DataPageManager from './src/data.js';
+
+    const manager = new DataPageManager();
+    manager.init();
+  </script>
+
+</body>
+</html>

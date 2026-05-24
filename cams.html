@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cams — CV Warehouse Applications</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/shared.css" />
+  <style>
+    body { overflow: hidden; background: var(--black); }
+
+    /* ── Page shell ── */
+    .cams-page {
+      position: fixed;
+      top: var(--header-h);
+      left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 24px 28px;
+    }
+
+    /* ══════════════════════════════
+       LEFT COLUMN — feed + toolbar
+       ══════════════════════════════ */
+    .feed-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 0 0 62%;
+      max-width: 62%;
+      height: 100%;
+      justify-content: center;
+    }
+
+    /* Feed window */
+    .feed-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      max-height: calc(100% - 60px);
+      background: #050508;
+      border: 1px solid var(--gold-dim);
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    /* Feed label overlay — top left */
+    .feed-label {
+      position: absolute;
+      top: 10px; left: 12px;
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(0,0,0,0.65);
+      border: 1px solid var(--gold-dim);
+      padding: 3px 10px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* Fullscreen icon — top right */
+    .feed-fullscreen {
+      position: absolute;
+      top: 8px; right: 10px;
+      font-size: 1rem;
+      color: var(--gold);
+      cursor: pointer;
+      z-index: 10;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--gold);
+      padding: 2px 7px;
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0em;
+      text-transform: uppercase;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .feed-fullscreen:hover { color: var(--gold); border-color: var(--gold); }
+
+    /* MJPEG image — fills feed-wrap */
+    #cam-feed {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* Connecting overlay */
+    .feed-connecting {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #050508;
+      z-index: 5;
+    }
+    .feed-connecting.hidden { display: none; }
+    .feed-spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--gold-dim);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .feed-connecting p {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* ── Toolbar below feed ── */
+    .feed-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Arrow buttons */
+    .cam-arrow {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      background: var(--bubble-bg);
+      border: 1px solid var(--gold);
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .cam-arrow:hover { color: var(--gold); border-color: var(--gold); }
+
+    /* Camera dots */
+    .cam-dots {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .cam-dot {
+      width: 8px; height: 8px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .cam-dot.active { background: var(--gold); border-color: var(--gold); }
+
+    /* Toolbar buttons */
+    .tool-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      background: var(--bubble-bg);
+      border: 1px solid var(--gold-dim);
+      padding: 0.3rem 0.9rem;
+      height: 36px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      white-space: nowrap;
+    }
+    .tool-btn:hover  { color: var(--gold); border-color: var(--gold); }
+    .tool-btn.active { color: var(--black); background: var(--gold); border-color: var(--gold); }
+    .tool-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* Divider in toolbar */
+    .toolbar-sep {
+      width: 1px; height: 24px;
+      background: var(--gold-dim);
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════
+       RIGHT COLUMN — side panel
+       ══════════════════════════════ */
+    .side-panel {
+      flex: 0 0 32%;
+      max-width: 32%;
+      height: 100%;
+      background: var(--bubble-bg);
+      border: 1px solid var(--gold-dim);
+      border-radius: 2px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Tab header */
+    .panel-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--gold-dim);
+      flex-shrink: 0;
+    }
+    .panel-tab {
+      flex: 1;
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      background: transparent;
+      border: none;
+      border-right: 1px solid var(--gold-dim);
+      padding: 0.65rem 0;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
+    .panel-tab:last-child { border-right: none; }
+    .panel-tab:hover { color: var(--gold); background: var(--gold-faint); }
+    .panel-tab.active { color: var(--gold); background: var(--gold-faint); }
+
+    /* Tab panes */
+    .panel-pane { display: none; flex: 1; overflow-y: auto; padding: 16px; }
+    .panel-pane.active { display: flex; flex-direction: column; gap: 14px; }
+
+    /* Panel section */
+    .panel-section {
+      border: 1px solid var(--gold-dim);
+      border-radius: 2px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .panel-section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(212,175,55,0.06);
+      border-bottom: 1px solid var(--gold-dim);
+      padding: 6px 12px;
+    }
+    .panel-section-body { padding: 10px 12px; }
+
+    /* Info rows */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 3px 0;
+      font-size: 1rem;
+    }
+    .info-label {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .info-value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      color: var(--text);
+    }
+    .info-value.gold { color: var(--gold); }
+
+    /* Click log */
+    .click-log {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 130px;
+      overflow-y: auto;
+    }
+    .click-log li {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      color: rgba(232,228,220,0.6);
+      padding: 3px 6px;
+      border-left: 2px solid var(--gold-dim);
+      background: rgba(212,175,55,0.03);
+    }
+    .click-log li:first-child { color: var(--text); border-left-color: var(--gold); }
+
+    /* Panel action buttons */
+    .panel-btn {
+      width: 100%;
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      background: transparent;
+      border: 1px solid var(--gold-dim);
+      padding: 0.5rem 0;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .panel-btn:hover  { color: var(--gold); border-color: var(--gold); background: var(--gold-faint); }
+    .panel-btn.danger { border-color: rgba(180,60,60,0.4); color: rgba(220,100,100,0.7); }
+    .panel-btn.danger:hover { color: #e06060; border-color: #e06060; background: rgba(180,60,60,0.06); }
+    .panel-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .panel-btn.running { color: var(--gold); border-color: var(--gold); background: var(--gold-faint); }
+
+    /* Detection count grid */
+    .count-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .count-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+    }
+    .count-name {
+      font-family: 'Cormorant Garamond', serif;
+      color: rgba(232,228,220,0.7);
+    }
+    .count-num {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--gold);
+    }
+
+    /* Results tab */
+    .results-empty {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.9rem;
+      font-style: italic;
+      color: var(--text-dim);
+      text-align: center;
+      padding: 24px 0;
+    }
+    .result-file {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 2px;
+      margin-bottom: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.62rem;
+      color: rgba(232,228,220,0.6);
+    }
+    .result-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .result-file a {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      text-decoration: none;
+      border: 1px solid var(--gold-dim);
+      padding: 2px 8px;
+      transition: color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+    .result-file a:hover { color: var(--gold); border-color: var(--gold); font-size: 1rem; }
+
+    /* Status badge */
+    .status-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold-dim);
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .status-dot.live { background: #3ecf6e; box-shadow: 0 0 6px #3ecf6e; }
+    .status-dot.busy { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+
+    /* Scrollbar inside panel */
+    .panel-pane::-webkit-scrollbar { width: 3px; }
+    .panel-pane::-webkit-scrollbar-thumb { background: var(--gold-dim); }
+  </style>
+</head>
+<body>
+
+  <!-- ── Shared Header ── -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="site-title">CV Warehouse Applications</span>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="env.html"   class="nav-link">3D Env</a>
+        <a href="cams.html"  class="nav-link active">Cams</a>
+        <a href="data.html"  class="nav-link">Data</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ── Main layout ── -->
+  <div class="cams-page">
+
+    <!-- LEFT: feed + toolbar -->
+    <div class="feed-col">
+
+      <!-- Feed window -->
+      <div class="feed-wrap" id="feed-wrap">
+        <div class="feed-label" id="feed-label">CAM 1 · 141.165.40.34</div>
+        <button class="feed-fullscreen" id="btn-fullscreen" title="Fullscreen">&#9974; Full</button>
+
+        <img id="cam-feed" src="" alt="camera feed" />
+
+        <div class="feed-connecting" id="feed-connecting">
+          <div class="feed-spinner"></div>
+          <p>Connecting to stream&hellip;</p>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="feed-toolbar">
+        <button class="cam-arrow" id="btn-prev" title="Previous camera">&#8592;</button>
+
+        <div class="cam-dots" id="cam-dots">
+          <!-- dots injected by JS -->
+        </div>
+
+        <button class="cam-arrow" id="btn-next" title="Next camera">&#8594;</button>
+
+        <div class="toolbar-sep"></div>
+
+        <button class="tool-btn" id="btn-overlay-toggle" title="Toggle YOLO bounding box overlay">
+          Overlay
+        </button>
+
+        <button class="tool-btn" id="btn-fullscreen-tb">
+          &#9974; Fullscreen
+        </button>
+      </div>
+
+    </div><!-- /.feed-col -->
+
+    <!-- RIGHT: side panel -->
+    <div class="side-panel">
+
+      <!-- Tabs -->
+      <div class="panel-tabs">
+        <button class="panel-tab active" data-tab="buttons">Buttons</button>
+        <button class="panel-tab" data-tab="results">Results</button>
+      </div>
+
+      <!-- ── BUTTONS TAB ── -->
+      <div class="panel-pane active" id="pane-buttons">
+
+        <!-- Current Camera -->
+        <div class="panel-section">
+          <div class="panel-section-title">Current Camera</div>
+          <div class="panel-section-body">
+            <div class="info-row">
+              <span class="info-label">Camera</span>
+              <span class="info-value gold" id="info-cam-name">CAM 1</span>
+            </div>
+            <!-- <div class="info-row">
+              <span class="info-label">IP</span>
+              <span class="info-value" id="info-cam-ip">141.165.40.34</span>
+            </div> -->
+            <div class="info-row">
+              <span class="info-label">Resolution</span>
+              <span class="info-value" id="info-cam-res">1960 × 1080</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Status</span>
+              <span class="info-value" id="info-cam-status">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="status-text">Connecting</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Click Log -->
+        <div class="panel-section">
+          <div class="panel-section-title">Click Log — World Coords</div>
+          <div class="panel-section-body">
+            <ul class="click-log" id="click-log">
+              <li style="color:var(--text-dim); border-left-color:var(--gold-dim);">
+                No clicks yet&hellip;
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Object Detection -->
+        <div class="panel-section">
+          <div class="panel-section-title">Object Detection</div>
+          <div class="panel-section-body" style="display:flex;flex-direction:column;gap:8px;">
+            <div class="info-row">
+              <span class="info-label">Total Objects</span>
+              <span class="info-value gold" id="obj-total">—</span>
+            </div>
+            <div class="count-grid" id="count-grid">
+              <!-- populated after detection -->
+            </div>
+            <button class="panel-btn" id="btn-detect">Run Detection</button>
+            <button class="panel-btn" id="btn-save">Save Results</button>
+          </div>
+        </div>
+
+        <!-- Robot -->
+        <div class="panel-section">
+          <div class="panel-section-title">Robot</div>
+          <div class="panel-section-body" style="display:flex;flex-direction:column;gap:8px;">
+            <button class="panel-btn" id="btn-route">Run Route</button>
+            <div class="info-row" style="margin-top:2px;">
+              <span class="info-label">Route</span>
+              <span class="info-value" id="route-status">Idle</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /#pane-buttons -->
+
+      <!-- ── RESULTS TAB ── -->
+      <div class="panel-pane" id="pane-results">
+        <div class="panel-section">
+          <div class="panel-section-title">Saved Detection Files</div>
+          <div class="panel-section-body" id="results-list">
+            <div class="results-empty">No saved results yet.</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.side-panel -->
+
+  </div><!-- /.cams-page -->
+
+  <script>
+  (() => {
+    'use strict';
+
+    const API = 'http://localhost:8000';
+
+    // Camera metadata — mirrors Cameras.py order
+    const CAMERAS = [
+      { name: 'CAM 1', ip: '141.165.40.34', res: '1960 × 1080' },
+      { name: 'CAM 2', ip: '141.165.40.33', res: '1960 × 1080' },
+      { name: 'CAM 3', ip: '141.165.40.96', res: '2048 × 1536' },
+      // { name: 'CAM 4', ip: '141.165.40.97', res: '2048 x 1536' },
+      // Add more cameras here as needed — matching Cameras.py order
+    ];
+
+    let activeCam    = 0;
+    let overlayOn    = false;
+    let detRunning   = false;
+    let routeRunning = false;
+    const clickLog   = [];
+    const MAX_LOG    = 10;
+
+    // ── DOM refs ──────────────────────────────────────────────────────────────
+    const feed         = document.getElementById('cam-feed');
+    const connecting   = document.getElementById('feed-connecting');
+    const feedLabel    = document.getElementById('feed-label');
+    const dotsWrap     = document.getElementById('cam-dots');
+    const btnPrev      = document.getElementById('btn-prev');
+    const btnNext      = document.getElementById('btn-next');
+    const btnOverlay   = document.getElementById('btn-overlay-toggle');
+    const btnFullscr   = document.getElementById('btn-fullscreen');
+    const btnFullscrTb = document.getElementById('btn-fullscreen-tb');
+    const feedWrap     = document.getElementById('feed-wrap');
+    const infoCamName  = document.getElementById('info-cam-name');
+    const infoCamIp    = document.getElementById('info-cam-ip');
+    const infoCamRes   = document.getElementById('info-cam-res');
+    const statusDot    = document.getElementById('status-dot');
+    const statusText   = document.getElementById('status-text');
+    const logList      = document.getElementById('click-log');
+    const objTotal     = document.getElementById('obj-total');
+    const countGrid    = document.getElementById('count-grid');
+    const btnDetect    = document.getElementById('btn-detect');
+    const btnSave      = document.getElementById('btn-save');
+    const btnRoute     = document.getElementById('btn-route');
+    const routeStatus  = document.getElementById('route-status');
+    const resultsList  = document.getElementById('results-list');
+
+    // ── Camera dots ───────────────────────────────────────────────────────────
+    function buildDots() {
+      dotsWrap.innerHTML = '';
+      CAMERAS.forEach((_, i) => {
+        const d = document.createElement('div');
+        d.className = 'cam-dot' + (i === activeCam ? ' active' : '');
+        d.title = CAMERAS[i].name;
+        d.addEventListener('click', () => switchCam(i));
+        dotsWrap.appendChild(d);
+      });
+    }
+
+    function updateDots() {
+      dotsWrap.querySelectorAll('.cam-dot').forEach((d, i) => {
+        d.classList.toggle('active', i === activeCam);
+      });
+    }
+
+    // ── Switch camera ─────────────────────────────────────────────────────────
+    function switchCam(idx) {
+      activeCam = ((idx % CAMERAS.length) + CAMERAS.length) % CAMERAS.length;
+      const cam = CAMERAS[activeCam];
+
+      // Update feed src
+      connecting.classList.remove('hidden');
+      const url = `${API}/stream/${activeCam}` + (overlayOn ? '?annotated=1' : '');
+      feed.src  = '';
+      feed.src  = url;
+
+      // Update label & info panel
+      feedLabel.textContent   = `${cam.name} · ${cam.ip}`;
+      infoCamName.textContent = cam.name;
+      // infoCamIp.textContent   = cam.ip;
+      infoCamRes.textContent  = cam.res;
+      statusDot.className     = 'status-dot';
+      statusText.textContent  = 'Connecting';
+
+      updateDots();
+    }
+
+    feed.addEventListener('load', () => {
+      connecting.classList.add('hidden');
+      statusDot.className   = 'status-dot live';
+      statusText.textContent = 'Live';
+    });
+
+    feed.addEventListener('error', () => {
+      statusDot.className   = 'status-dot';
+      statusText.textContent = 'Error';
+    });
+
+    // ── Arrow buttons ─────────────────────────────────────────────────────────
+    btnPrev.addEventListener('click', () => switchCam(activeCam - 1));
+    btnNext.addEventListener('click', () => switchCam(activeCam + 1));
+
+    // ── Fullscreen ────────────────────────────────────────────────────────────
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        feedWrap.requestFullscreen().catch(console.error);
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    btnFullscr.addEventListener('click',   toggleFullscreen);
+    btnFullscrTb.addEventListener('click', toggleFullscreen);
+
+    // ── Click-to-drive ────────────────────────────────────────────────────────
+    feedWrap.addEventListener('click', async (e) => {
+      // Ignore clicks on buttons inside the wrap
+      if (e.target !== feed && e.target !== feedWrap) return;
+
+      const rect = feed.getBoundingClientRect();
+      const x    = e.clientX - rect.left;
+      const y    = e.clientY - rect.top;
+
+      try {
+        const res  = await fetch(`${API}/click`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cam:      activeCam,
+            x,
+            y,
+            stream_w: rect.width,
+            stream_h: rect.height
+          })
+        });
+        const data = await res.json();
+        if (data.world) {
+          const [wx, wy] = data.world;
+          addClickLog(`(${wx.toFixed(2)}, ${wy.toFixed(2)}) — ${CAMERAS[activeCam].name}`);
+        } else if (data.error) {
+          addClickLog(`Error: ${data.error}`);
+        }
+      } catch (err) {
+        addClickLog(`Connection error`);
+      }
+    });
+
+    function addClickLog(text) {
+      clickLog.unshift(text);
+      if (clickLog.length > MAX_LOG) clickLog.pop();
+      logList.innerHTML = clickLog.map((t, i) =>
+        `<li>${t}</li>`
+      ).join('');
+    }
+
+    // ── YOLO overlay toggle ───────────────────────────────────────────────────
+    btnOverlay.addEventListener('click', async () => {
+      try {
+        const res  = await fetch(`${API}/overlay-toggle`, { method: 'POST' });
+        const data = await res.json();
+        overlayOn  = data.overlay_on;
+        btnOverlay.textContent = overlayOn ? 'Overlay On' : 'Overlay Off';
+        btnOverlay.classList.toggle('active', overlayOn);
+        // Reload stream with annotation flag
+        switchCam(activeCam);
+      } catch (err) {
+        console.error('Overlay toggle failed', err);
+      }
+    });
+
+    // ── Run Detection ─────────────────────────────────────────────────────────
+    btnDetect.addEventListener('click', async () => {
+      if (detRunning) return;
+      detRunning = true;
+      btnDetect.textContent = 'Running…';
+      btnDetect.classList.add('running');
+      btnDetect.disabled = true;
+      objTotal.textContent = '—';
+      countGrid.innerHTML  = '';
+
+      try {
+        await fetch(`${API}/detect`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cam: activeCam, save: false })
+        });
+        // Poll for completion
+        pollDetection();
+      } catch (err) {
+        resetDetectBtn();
+      }
+    });
+
+    function pollDetection() {
+      const poll = setInterval(async () => {
+        try {
+          const res  = await fetch(`${API}/detect-status`);
+          const data = await res.json();
+          if (!data.running) {
+            clearInterval(poll);
+            detRunning = false;
+            resetDetectBtn();
+            renderCounts(data.counts, data.total);
+            refreshResultsTab();
+          }
+        } catch (_) { clearInterval(poll); resetDetectBtn(); }
+      }, 1500);
+    }
+
+    function resetDetectBtn() {
+      detRunning = false;
+      btnDetect.textContent = 'Run Detection';
+      btnDetect.classList.remove('running');
+      btnDetect.disabled = false;
+    }
+
+    function renderCounts(counts, total) {
+      objTotal.textContent = total ?? '—';
+      countGrid.innerHTML  = Object.entries(counts || {})
+        .sort((a, b) => b[1] - a[1])
+        .map(([name, n]) =>
+          `<div class="count-row">
+             <span class="count-name">${name}</span>
+             <span class="count-num">${n}</span>
+           </div>`)
+        .join('');
+    }
+
+    // ── Save Results ──────────────────────────────────────────────────────────
+    btnSave.addEventListener('click', async () => {
+      btnSave.disabled = true;
+      btnSave.textContent = 'Saving…';
+      try {
+        const res  = await fetch(`${API}/detect`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cam: activeCam, save: true })
+        });
+        const data = await res.json();
+        if (data.error) {
+          btnSave.textContent = data.error;
+          setTimeout(() => { btnSave.textContent = 'Save Results'; btnSave.disabled = false; }, 2000);
+          return;
+        }
+        // Poll then refresh
+        const pollSave = setInterval(async () => {
+          const sr  = await fetch(`${API}/detect-status`);
+          const sd  = await sr.json();
+          if (!sd.running) {
+            clearInterval(pollSave);
+            btnSave.textContent = 'Saved ✓';
+            btnSave.disabled    = false;
+            setTimeout(() => { btnSave.textContent = 'Save Results'; }, 2000);
+            refreshResultsTab();
+          }
+        }, 1500);
+      } catch (_) {
+        btnSave.textContent = 'Save Results';
+        btnSave.disabled    = false;
+      }
+    });
+
+    // ── Run Route ─────────────────────────────────────────────────────────────
+    btnRoute.addEventListener('click', async () => {
+      if (routeRunning) return;
+      try {
+        const res  = await fetch(`${API}/run-route`, { method: 'POST' });
+        const data = await res.json();
+        if (data.error) { routeStatus.textContent = data.error; return; }
+        routeRunning = true;
+        btnRoute.classList.add('running');
+        btnRoute.textContent  = 'Route Running…';
+        routeStatus.textContent = `Running · ${data.stops} stops`;
+        pollRoute();
+      } catch (_) {}
+    });
+
+    function pollRoute() {
+      const poll = setInterval(async () => {
+        try {
+          const res  = await fetch(`${API}/route-status`);
+          const data = await res.json();
+          if (!data.running) {
+            clearInterval(poll);
+            routeRunning = false;
+            btnRoute.classList.remove('running');
+            btnRoute.textContent  = 'Run Route';
+            routeStatus.textContent = 'Complete';
+          }
+        } catch (_) { clearInterval(poll); }
+      }, 2000);
+    }
+
+    // ── Tab switching ─────────────────────────────────────────────────────────
+    document.querySelectorAll('.panel-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel-pane').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`pane-${tab.dataset.tab}`).classList.add('active');
+        if (tab.dataset.tab === 'results') refreshResultsTab();
+      });
+    });
+
+    // ── Results tab ───────────────────────────────────────────────────────────
+    async function refreshResultsTab() {
+      try {
+        const res   = await fetch(`${API}/detection-files`);
+        const data  = await res.json();
+        const files = data.files || [];
+        if (!files.length) {
+          resultsList.innerHTML = '<div class="results-empty">No saved results yet.</div>';
+          return;
+        }
+        resultsList.innerHTML = files.map(f =>
+          `<div class="result-file">
+             <span class="result-file-name">${f}</span>
+             <a href="${API}/detection-file/${encodeURIComponent(f)}" target="_blank">View</a>
+           </div>`
+        ).join('');
+      } catch (_) {}
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    buildDots();
+    switchCam(0);
+
+  })();
+  </script>
+
+</body>
+</html>

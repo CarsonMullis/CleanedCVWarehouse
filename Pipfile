@@ -1,0 +1,10 @@
+[[source]]
+name = "testpypi"
+url = "https://test.pypi.org/simple"
+verify_ssl = true
+
+[packages]
+avarobotutils = {version="==0.2.8", index="testpypi"}
+opencv-python = "*"
+
+[dev-packages]

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CV Warehouse Applications</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/shared.css" />
+  <style>
+    body { overflow-y: auto; }
+
+    .page-body {
+      margin-top: var(--header-h);
+      min-height: calc(100vh - var(--header-h));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    /* ─ Section bubble ─ */
+    .section-bubble {
+      width: 100%;
+      max-width: 1500px;
+      background: var(--bubble-bg);
+      border: 1px solid var(--gold-dim);
+      border-radius: 4px;
+      padding: 2rem 2.5rem 2.25rem;
+      margin-bottom: 1.75rem;
+      box-shadow: 0 4px 40px rgba(0,0,0,0.5);
+    }
+
+    .bubble-title {
+      font-family: 'Cinzel', serif;
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--gold-dim);
+    }
+
+    .bubble-body {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 300;
+      line-height: 1.9;
+      color: var(--text);
+    }
+
+    .letter-section .bubble-body {
+      font-style: italic;
+      color: var(--text);
+    }
+
+    .end-mark {
+      margin-top: 0.5rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      color: var(--gold-dim);
+      letter-spacing: 0.3em;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="site-title">CV Warehouse Applications</span>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link active">Home</a>
+        <a href="env.html"   class="nav-link">3D Env</a>
+        <a href="cams.html"  class="nav-link">Cams</a>
+        <a href="data.html"  class="nav-link">Data</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-body">
+
+    <div class="section-bubble">
+      <div class="bubble-title">About the Project</div>
+      <div class="bubble-body">
+        <p>The goal of this project was to develop a Digital Twin, a system that keeps track of of assets in the warehouse and allows users to inspect assets at a distance.</p><br>
+        
+        <p>We built a warehouse intelligence system that uses four ceiling-mounted corner cameras to monitor and interpret activity within a live warehouse environment. Our system leverages YOLO-based object detection to identify, track, and manage warehouse assets in real time, including robots, pallets, crates, and workstations.</p><br>
+        
+        <p>To create spatial awareness of the warehouse, we developed multiple 3D environment reconstruction approaches. One environment was built using Three.js, where a predefined warehouse boundary and captured images are used to position detected objects within an interactive 3D scene. In parallel, we implemented a second reconstruction pipeline that uses video input and AI-based processing to generate a Gaussian Splat representation of the warehouse, allowing users to visualize the environment in a detailed and immersive 3D format.</p><br>
+        
+        <p>We also developed interactive 3D object modeling capabilities that reconstruct warehouse objects from photographs, enabling users to inspect and interact with generated models directly within the system. Detection and tracking results produced by our computer vision pipeline can be saved for later analysis, providing persistent records of warehouse activity and object placement over time.</p><br>
+        
+        <p>Beyond visualization and detection, we integrated direct interaction with the AVA mobile robot through a browser-based interface. Using API-driven controls, operators can communicate with and control the robot directly from the web application, allowing the system to bridge real-time warehouse perception with robotic interaction and navigation.<p>
+ 
+      </div>
+    </div>
+
+    <!-- <div class="section-bubble">
+      <div class="bubble-title">Meet the Team &mdash; Team Forklift</div>
+      <div class="bubble-body">
+        Ethay eamtay isway omposedcay ofway assionateplay engineersway andway innovatorsway owhay aredshay away isionvay orfay intelligentway arehouse operationsway. Eachway embermay oughtbray uniqueway expertiseway inway omputer visioncay, embeddeday ystemssay, andway ull-stackfay evelopmentday — unitedway byway ethay oalsgay ofway isthay apstone coursecay.
+      </div>
+    </div> -->
+
+    <div class="section-bubble letter-section">
+      <div class="bubble-title">For Those Who Come After&hellip;</div>
+      <div class="bubble-body">
+        <p>To anyone who gets the reference, gold star for you.</p><br>
+
+        <p>This area is intended for those who did not originally start the project but are looking to improve or expand upon it, whether as a capstone project of their own or simply to experiment with the system.</p><br>
+
+        <p>This project is composed of three subprojects: Object Detection with AVA, the 3D Environment, and the 3D Modeling of warehouse objects. Each component came with its own challenges and frustrations.</p><br>
+
+        <p>For the Object Detection system, one of the initial challenges was finding a suitable vision model and improving its ability to accurately capture and detect objects through the warehouse cameras. Toward the end of development, the focus shifted to integrating the AVA robot and enabling it to navigate through simple interactions, such as clicking locations on the live camera display feed.</p><br>
+
+        <p>Because this project combines three distinct subprojects, it can become easy for team members to work in silos and lose awareness of the progress being made in other areas. It is important that everyone remains informed about the current state of each subsystem, as this improves overall cohesion and strengthens each member’s ability to discuss and contribute to the project.</p><br>
+
+        <p>Those looking to improve the project may explore alternative object detection models, further implementation of Gaussian Splats, improvements to AVA’s ability to capture photos and autonomously explore the warehouse for 3D generation or object detection, and expanded 3D object modeling for applications such as damage detection and warehouse asset storage.</p><br>
+
+        <p>As time goes on, I hope this area becomes filled with stories, notes, and lessons from the people who worked on the project — including the challenges they faced, the successes they achieved, and the warnings or advice they wish to pass on to future teams.</p><br>
+
+    </div>
+
+    <div class="end-mark">&#9670;</div>
+
+  </div>
+
+</body>
+</html>
